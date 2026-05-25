@@ -83,21 +83,34 @@ def save_data(data):
 app_data = load_data()
 ZOE_PRAISES = ["Zoe 開心地轉了三個圈圈！🐾", "Zoe 給你一個超萌的燦笑！🐶✨", "Zoe 跑過來瘋狂搖尾巴！❤️", "Zoe 覺得你是世界上最棒的主人！👑", "金幣叮噹響，Zoe 給你一個大大的擁抱！🪙", "Zoe 用崇拜的眼神看著你！👀✨"]
 
-# --- 4. 頂部視覺：置中 Zoe 本尊相片 ---
+# --- 4. 頂部視覺：置中 Zoe 本尊相片 (終極雲端路徑相容版) ---
 st.markdown('<div class="zoe-container">', unsafe_allow_html=True)
 possible_photos = ["zoe.png", "zoe.jpg", "zoe.jpeg", "ZOE.JPG", "zoe.JPG", "ZOE.PNG"]
-found_photo = next((p for p in possible_photos if os.path.exists(p)), None)
+found_photo = None
+
+# 獲取目前 app.py 所在的絕對資料夾路徑
+current_dir = os.path.dirname(__file__)
+
+for photo in possible_photos:
+    # 組合出絕對路徑，確保雲端伺服器 100% 找得到
+    full_path = os.path.join(current_dir, photo)
+    if os.path.exists(full_path):
+        found_photo = full_path
+        break
 
 if found_photo:
     try:
-        with open(found_photo, "rb") as image_file: encoded_string = base64.b64encode(image_file.read()).decode()
+        with open(found_photo, "rb") as image_file:
+            encoded_string = base64.b64encode(image_file.read()).decode()
         mime_type, _ = mimetypes.guess_type(found_photo)
         st.markdown(f'<img src="data:{mime_type or "image/png"};base64,{encoded_string}" class="zoe-circular">', unsafe_allow_html=True)
         st.markdown('<p style="color:#B8860B; font-weight:bold; margin-top:10px; font-size:1.1rem;">🐾 首席金幣監督員：Zoe 🐾</p>', unsafe_allow_html=True)
-    except: pass
+    except Exception as e:
+        st.caption(f"圖片載入失敗: {e}")
 else:
+    # 如果還是找不到，把伺服器當前的目錄結構印出來，方便除錯
     st.image("https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=400&q=80", width=160)
-st.markdown('</div>', unsafe_allow_html=True)
+    st.caption("⚠️ 雲端找不到 zoe.png，請確認照片與 app.py 放在同一個資料夾內。")
 
 # --- 5. 總分儀表板 (加入動態呼吸燈) ---
 col1, col2 = st.columns(2)
